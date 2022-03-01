@@ -1,48 +1,29 @@
-package service
+package function
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"github.com/gorilla/mux"
 
 	dto "github.com/indranureska/service/dto"
 	serviceConst "github.com/indranureska/service/rest/common"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // Get list of user
-func UserList(w http.ResponseWriter, r *http.Request) {
+func ListUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var users []dto.User
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Create a new client and connect to the server
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(serviceConst.BLOG_DB_URI))
+	// Get MongoDB connection
+	client, err := GetMongoDbClient()
 	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-
-	// Ping the primary
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		panic(err)
+		respondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		return
 	} else {
-		fmt.Println("Successfully connected and pinged.")
-
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
@@ -50,7 +31,7 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 		cur, err := userCollection.Find(context.TODO(), bson.M{})
 
 		if err != nil {
-			panic(err)
+			log.Println(err)
 		}
 
 		// Close the cursor once finished
@@ -65,7 +46,7 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 			// & character returns the memory address of the following variable.
 			err := cur.Decode(&user) // decode similar to deserialize process.
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
 			// add item our array
@@ -73,14 +54,52 @@ func UserList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := cur.Err(); err != nil {
-			log.Fatal(err)
+			respondWithError(w, http.StatusBadRequest, "Invalid record")
+			return
 		}
 
-		json.NewEncoder(w).Encode(users) // encode similar to serialize process.
+		respondWithJSON(w, http.StatusOK, users)
 	}
 }
 
-// TODO: find user by user email address
+// Find user by user email address
+func FindUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	vars := mux.Vars(r)
+	usrEmail := vars["usrEmail"]
+
+	log.Println("email address from parameter : " + usrEmail)
+
+	if usrEmail == "" {
+		log.Println("Invalid email adddress")
+		respondWithError(w, http.StatusBadRequest, "Invalid email address")
+		return
+	}
+
+	var user dto.User
+
+	// Get MongoDB connection
+	client, err := GetMongoDbClient()
+	if err != nil {
+		log.Println(err)
+	} else {
+		// Select database and collection
+		userCollection := client.Database("blogdb").Collection("users")
+
+		// Find user based on parameter
+		filter := bson.M{"usr_email": usrEmail}
+		err := userCollection.FindOne(context.TODO(), filter).Decode(&user)
+
+		if err != nil {
+			log.Println(err)
+			respondWithError(w, http.StatusBadRequest, "record not found")
+			return
+		}
+	}
+
+	respondWithJSON(w, http.StatusOK, user)
+}
 
 // TODO: update user
 

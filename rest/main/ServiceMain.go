@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	userService "github.com/indranureska/service/rest/function"
 	serviceConst "github.com/indranureska/service/rest/common"
+	userService "github.com/indranureska/service/rest/function"
 )
 
 func main() {
@@ -14,7 +14,8 @@ func main() {
 
 	//r.HandleFunc("/foo", fooHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodOptions)
 	r.HandleFunc("/", helloWorldHandler)
-	r.HandleFunc(serviceConst.LIST_OF_USER_SERVICE_PATH, userService.UserList)
+	r.HandleFunc(serviceConst.LIST_OF_USER_SERVICE_PATH, userService.ListUser).Methods("GET")
+	r.HandleFunc(serviceConst.FIND_USER_SERVICE_PATH, userService.FindUser).Methods("GET")
 	//r.Use(mux.CORSMethodMiddleware(r))
 
 	http.ListenAndServe(":8000", r)

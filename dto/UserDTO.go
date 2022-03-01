@@ -5,9 +5,9 @@ type Response struct {
 }
 
 type User struct {
-	UserEmail string `json:"usr_email"`
-	Password  string `json:"password"`
-	LastLogin string `json:"last_login"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+	UserEmail string `bson:"usr_email"`
+	Password  string `bson:"password"`
+	LastLogin string `bson:"last_login"`
+	FirstName string `bson:"firstname"`
+	LastName  string `bson:"lastname"`
 }
