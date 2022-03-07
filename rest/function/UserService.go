@@ -21,7 +21,7 @@ func ListUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
 		return
 	} else {
 		// Select database and collection
@@ -54,11 +54,11 @@ func ListUser(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := cur.Err(); err != nil {
-			respondWithError(w, http.StatusBadRequest, "Invalid record")
+			RespondWithError(w, http.StatusBadRequest, "Invalid record")
 			return
 		}
 
-		respondWithJSON(w, http.StatusOK, users)
+		RespondWithJSON(w, http.StatusOK, users)
 	}
 }
 
@@ -68,14 +68,6 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	usrEmail := vars["usrEmail"]
-
-	log.Println("email address from parameter : " + usrEmail)
-
-	if usrEmail == "" {
-		log.Println("Invalid email adddress")
-		respondWithError(w, http.StatusBadRequest, "Invalid email address")
-		return
-	}
 
 	var user dto.User
 
@@ -93,15 +85,40 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println(err)
-			respondWithError(w, http.StatusBadRequest, "record not found")
+			RespondWithError(w, http.StatusBadRequest, "record not found")
 			return
 		}
 	}
 
-	respondWithJSON(w, http.StatusOK, user)
+	RespondWithJSON(w, http.StatusOK, user)
+}
+
+// TODO: create user
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // TODO: update user
+// func UpdateUser(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+
+// 	vars := mux.Vars(r)
+// 	usrId := vars["id"]
+
+// 	// Get MongoDB connection
+// 	client, err := GetMongoDbClient()
+// 	if err != nil {
+// 		log.Println(err)
+// 	} else {
+// 		// Select database and collection
+// 		userCollection := client.Database("blogdb").Collection("users")
+
+// 		// Update document based on given id
+
+// 	}
+
+// 	respondWithJSON(w, http.StatusOK, user)
+// }
 
 // TODO: delete user
 
