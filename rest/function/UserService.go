@@ -2,6 +2,7 @@ package function
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -74,7 +75,8 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		log.Println(err)
+		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		return
 	} else {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
@@ -93,9 +95,48 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 	RespondWithJSON(w, http.StatusOK, user)
 }
 
-// TODO: create user
+// Create new user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
+	var user dto.User
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&user)
+
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	defer r.Body.Close()
+
+	log.Println("Request data: ")
+	log.Println("user - first name : " + user.FirstName)
+	log.Println("user - last name : " + user.LastName)
+	log.Println("user - last login : " + user.LastLogin)
+	log.Println("user - password : " + user.Password)
+	log.Println("user - user email : " + user.UserEmail)
+
+	// Get MongoDB connection
+	client, err := GetMongoDbClient()
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		return
+	} else {
+		// Select database and collection
+		userCollection := client.Database("blogdb").Collection("users")
+
+		// Insert new user
+		result, err := userCollection.InsertOne(context.TODO(), user)
+
+		if err != nil {
+			log.Println(err)
+			RespondWithError(w, http.StatusBadRequest, "user creation failed")
+			return
+		} else {
+			RespondWithJSON(w, http.StatusCreated, result)
+		}
+	}
 }
 
 // TODO: update user
