@@ -37,7 +37,7 @@ func GetMongoDbClient() (*mongo.Client, error) {
 			clientInstanceError = err
 		}
 		// Check the connection
-		err = client.Ping(ctx, readpref.Primary());
+		err = client.Ping(ctx, readpref.Primary())
 		if err != nil {
 			clientInstanceError = err
 		}
