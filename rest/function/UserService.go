@@ -155,6 +155,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	log.Println("Request data: ")
+	//log.Println("user - ID : " + string(user.ID))
 	log.Println("user - first name : " + user.FirstName)
 	log.Println("user - last name : " + user.LastName)
 	log.Println("user - last login : " + user.LastLogin)
@@ -170,13 +171,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Select database and collection
 	//userCollection := client.Database("blogdb").Collection("users")
 
-	// Update user data
-
-	// result, err := userCollection.UpdateOne(context.TODO(), filter, update)
+	//result, err := userCollection.UpdateOne(context.TODO(), filter, update)
 
 	// if err != nil {
 	// 	log.Println(err)
-	// 	RespondWithError(w, http.StatusBadRequest, "user creation failed")
+	RespondWithError(w, http.StatusBadRequest, "user update failed")
 	// 	return
 	// } else {
 	// 	RespondWithJSON(w, http.StatusCreated, result)
