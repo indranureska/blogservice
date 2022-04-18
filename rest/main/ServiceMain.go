@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	common "github.com/indranureska/service/rest/common"
@@ -22,7 +24,15 @@ func main() {
 
 	//r.Use(mux.CORSMethodMiddleware(r))
 
-	http.ListenAndServe(":8000", r)
+	srv := &http.Server{
+		Handler:      r,
+		Addr:         "127.0.0.1:8000",
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
+
 }
 
 // func fooHandler(w http.ResponseWriter, r *http.Request) {
