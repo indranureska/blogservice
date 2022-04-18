@@ -11,6 +11,7 @@ import (
 	dto "github.com/indranureska/service/dto"
 	serviceConst "github.com/indranureska/service/rest/common"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Get list of user
@@ -155,8 +156,10 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	objectID, _ := primitive.ObjectIDFromHex(user.ID.Hex())
+
 	log.Println("Request data: ")
-	log.Println("user - ID : " + user.ID.String())
+	log.Println("user - ID : " + objectID.String())
 	log.Println("user - first name : " + user.FirstName)
 	log.Println("user - last name : " + user.LastName)
 	log.Println("user - last login : " + user.LastLogin)
@@ -172,7 +175,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
-		filter := bson.M{"_id": user.ID}
+		filter := bson.M{"_id": objectID}
 		update := bson.M{"$set": &user}
 		result, err := userCollection.UpdateOne(context.TODO(), filter, update)
 
