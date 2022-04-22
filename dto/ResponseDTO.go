@@ -1,5 +1,5 @@
 package dto
 
 type Response struct {
-	InsertedID string `bson:"InsertedID"`
+	InsertedID string `json:"InsertedID" bson:"InsertedID"`
 }

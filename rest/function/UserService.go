@@ -111,8 +111,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	log.Println("Request data: ")
-	log.Println("user - ID : " + user.ID.String())
+	log.Println("Create User - Request data: ")
 	log.Println("user - first name : " + user.FirstName)
 	log.Println("user - last name : " + user.LastName)
 	log.Println("user - last login : " + user.LastLogin)
@@ -158,7 +157,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	objectID, _ := primitive.ObjectIDFromHex(user.ID.Hex())
 
-	log.Println("Request data: ")
+	log.Println("Update user - Request data: ")
 	log.Println("user - ID : " + objectID.String())
 	log.Println("user - first name : " + user.FirstName)
 	log.Println("user - last name : " + user.LastName)
@@ -189,7 +188,35 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: delete user
+// delete user
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Delete user function")
+	vars := mux.Vars(r)
+	objectID, _ := primitive.ObjectIDFromHex(vars["id"])
+
+	log.Println("Delete user with ID : " + objectID.Hex())
+
+	// Get MongoDB connection
+	client, err := GetMongoDbClient()
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		return
+	} else {
+		// Select database and collection
+		userCollection := client.Database("blogdb").Collection("users")
+
+		filter := bson.M{"_id": objectID}
+		result, err := userCollection.DeleteOne(context.TODO(), filter)
+
+		if err != nil {
+			log.Println(err)
+			RespondWithError(w, http.StatusBadRequest, "user delete failed")
+			return
+		} else {
+			RespondWithJSON(w, http.StatusCreated, result)
+		}
+	}
+}
 
 // TODO: login
 
