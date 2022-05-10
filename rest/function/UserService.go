@@ -127,6 +127,21 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
+		// Check if user email address exist
+		filter := bson.M{"usr_email": user.UserEmail}
+		count, err := userCollection.CountDocuments(context.TODO(), filter)
+
+		if err != nil {
+			log.Println(err)
+			RespondWithError(w, http.StatusBadRequest, "user creation failed")
+			return
+		}
+
+		if count > 0 {
+			RespondWithError(w, http.StatusNotAcceptable, "User email address exist, user creation failed")
+			return
+		}
+
 		// Insert new user
 		result, err := userCollection.InsertOne(context.TODO(), user)
 
