@@ -24,6 +24,9 @@ func main() {
 
 	//r.Use(mux.CORSMethodMiddleware(r))
 
+	// TODO: Initiate response message map
+	function.InitServiceMessages()
+
 	srv := &http.Server{
 		Handler: r,
 		Addr: "127.0.0.1:8000",

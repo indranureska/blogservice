@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	dto "github.com/indranureska/service/dto"
-	serviceConst "github.com/indranureska/service/rest/common"
+	common "github.com/indranureska/service/rest/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -23,7 +23,7 @@ func ListUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
 		return
 	} else {
 		// Select database and collection
@@ -56,7 +56,7 @@ func ListUser(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := cur.Err(); err != nil {
-			RespondWithError(w, http.StatusBadRequest, "Invalid record")
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_RECORD_MSG_KEY))
 			return
 		}
 
@@ -76,7 +76,7 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
 		return
 	} else {
 		// Select database and collection
@@ -88,7 +88,7 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, "record not found")
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.RECORD_NOT_FOUND_MSG_KEY))
 			return
 		}
 	}
@@ -106,7 +106,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&user)
 
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
 		return
 	}
 	defer r.Body.Close()
@@ -121,7 +121,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
 		return
 	} else {
 		// Select database and collection
@@ -133,12 +133,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, "user creation failed")
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_CREATION_FAILED_MSG_KEY))
 			return
 		}
 
 		if count > 0 {
-			RespondWithError(w, http.StatusNotAcceptable, "User email address exist, user creation failed")
+			RespondWithError(w, http.StatusNotAcceptable, ConstructServiceMessage(common.USER_EMAIL_ADDR_EXIST_MSG_KEY))
 			return
 		}
 
@@ -147,7 +147,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, "user creation failed")
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_CREATION_FAILED_MSG_KEY))
 			return
 		} else {
 			RespondWithJSON(w, http.StatusCreated, result)
@@ -165,7 +165,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&user)
 
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, "Invalid request payload")
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
 		return
 	}
 	defer r.Body.Close()
@@ -183,7 +183,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
 		return
 	} else {
 		// Select database and collection
@@ -195,7 +195,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, "user update failed")
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_UPDATE_FAILED_MSG_KEY))
 			return
 		} else {
 			RespondWithJSON(w, http.StatusCreated, result)
@@ -214,7 +214,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, serviceConst.DB_CONNECT_FAILED_MSG_DEF)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
 		return
 	} else {
 		// Select database and collection
@@ -225,7 +225,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, "user delete failed")
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_DELETE_FAILED_MSG_KEY))
 			return
 		} else {
 			RespondWithJSON(w, http.StatusCreated, result)
@@ -234,5 +234,23 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO: login
+func Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var user dto.User
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&user)
+
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		return
+	}
+	defer r.Body.Close()
+
+	// Check email address field
+
+	// Check password field
+}
 
 // TODO: update password
