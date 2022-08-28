@@ -264,6 +264,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // TODO: login
 func Login(w http.ResponseWriter, r *http.Request) {
+	log.Println("User login request")
 	w.Header().Set("Content-Type", "application/json")
 
 	var user dto.User
@@ -271,24 +272,27 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&user)
 
+	defer r.Body.Close()
+
 	if err != nil {
+		log.Println("User empty")
 		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_INFO_EMPTY_MSG_KEY))
 		return
 	}
 
 	// Check email address field
 	if len(user.UserEmail) == 0 {
+		log.Println("email address is blank")
 		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_EMAIL_BLANK_MSG_KEY))
 		return
 	}
 
 	// Check password field
 	if len(user.Password) == 0 {
+		log.Println("user password is blank")
 		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_PASSWORD_BLANK_MSG_KEY))
 		return
 	}
-
-	defer r.Body.Close()
 
 	// Get user data
 	userFromDb, err := getUserDataFromDbByEmailAddr(user.UserEmail)
@@ -298,8 +302,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_NOT_FOUND_MSG_KEY))
 		return
 	} else {
-		log.Println("User found, update to logged in")
-		RespondWithJSON(w, http.StatusOK, userFromDb)
+		log.Println("User found, validate password")
+		isPasswordValid := utils.CheckPasswordHash(user.Password, userFromDb.Password)
+
+		if isPasswordValid {
+			log.Println("Password valid, update to logged in")
+			RespondWithJSON(w, http.StatusOK, userFromDb)
+		} else {
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_LOGIN_FAILED_MSG_KEY))
+			return
+		}
 	}
 }
 

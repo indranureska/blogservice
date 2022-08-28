@@ -17,6 +17,9 @@ func InitServiceMessages() {
 	messageMap[serviceConst.SERVICE_NOT_AVAILABLE_MSG_KEY] = serviceConst.SERVICE_NOT_AVAILABLE_MSG_DEF_TEXT
 	messageMap[serviceConst.DB_CONNECT_FAILED_MSG_KEY] = serviceConst.DB_CONNECT_FAILED_MSG_DEF_TEXT
 	messageMap[serviceConst.INVALID_REQUEST_PAYLOAD_MSG_KEY] = serviceConst.INVALID_REQUEST_PAYLOAD_MSG_DEF_TEXT
+	messageMap[serviceConst.USER_INFO_EMPTY_MSG_KEY] = serviceConst.USER_INFO_EMPTY_MSG_DEF_TEXT
+	messageMap[serviceConst.USER_EMAIL_BLANK_MSG_KEY] = serviceConst.USER_EMAIL_BLANK_MSG_DEF_TEXT
+	messageMap[serviceConst.USER_PASSWORD_BLANK_MSG_KEY] = serviceConst.USER_PASSWORD_BLANK_MSG_DEF_TEXT
 }
 
 // TODO: To get message text from map, set default text if it's not exist
