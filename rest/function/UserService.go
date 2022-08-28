@@ -272,26 +272,35 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&user)
 
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_INFO_EMPTY_MSG_KEY))
 		return
 	}
 
 	// Check email address field
 	if len(user.UserEmail) == 0 {
-		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_EMAIL_BLANK_MSG_KEY))
 		return
 	}
 
 	// Check password field
 	if len(user.Password) == 0 {
-		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_PASSWORD_BLANK_MSG_KEY))
 		return
 	}
 
 	defer r.Body.Close()
 
 	// Get user data
+	userFromDb, err := getUserDataFromDbByEmailAddr(user.UserEmail)
 
+	if err != nil {
+		log.Println(err)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_NOT_FOUND_MSG_KEY))
+		return
+	} else {
+		log.Println("User found, update to logged in")
+		RespondWithJSON(w, http.StatusOK, userFromDb)
+	}
 }
 
 // TODO: update password

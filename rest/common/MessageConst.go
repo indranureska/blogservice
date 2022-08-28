@@ -29,3 +29,12 @@ const USER_UPDATE_FAILED_MSG_DEF_TEXT = "User update failed"
 
 const USER_DELETE_FAILED_MSG_KEY = "user.delete.failed"
 const USER_DELETE_FAILED_MSG_DEF_TEXT = "User delete failed"
+
+const USER_INFO_EMPTY_MSG_KEY = "user.info.empty"
+const USER_INFO_EMPTY_MSG_DEF_TEXT = "User info empty"
+
+const USER_EMAIL_BLANK_MSG_KEY = "user.email.blank"
+const USER_EMAIL_BLANK_DEF_TEXT = "User email address is blank"
+
+const USER_PASSWORD_BLANK_MSG_KEY = "user.password.blank"
+const USER_PASSWORD_BLANK_MSG_DEF_TEXT = "User password is blank"
