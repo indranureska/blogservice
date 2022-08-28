@@ -10,6 +10,7 @@ import (
 
 	dto "github.com/indranureska/service/dto"
 	common "github.com/indranureska/service/rest/common"
+	utils "github.com/indranureska/service/rest/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -71,13 +72,31 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	usrEmail := vars["usrEmail"]
 
+	if len(usrEmail) > 0 {
+		user, err := getUserDataFromDbByEmailAddr(usrEmail)
+
+		if err != nil {
+			log.Println(err)
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.RECORD_NOT_FOUND_MSG_KEY))
+			return
+		} else {
+			RespondWithJSON(w, http.StatusOK, user)
+		}
+	} else {
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		return
+	}
+}
+
+func getUserDataFromDbByEmailAddr(usrEmail string) (dto.User, error) {
 	var user dto.User
+	var processErr error
 
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
-		return
+		processErr = err
+		return user, processErr
 	} else {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
@@ -87,13 +106,11 @@ func FindUser(w http.ResponseWriter, r *http.Request) {
 		err := userCollection.FindOne(context.TODO(), filter).Decode(&user)
 
 		if err != nil {
-			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.RECORD_NOT_FOUND_MSG_KEY))
-			return
+			processErr = err
 		}
-	}
 
-	RespondWithJSON(w, http.StatusOK, user)
+		return user, processErr
+	}
 }
 
 // Create new user
@@ -117,6 +134,18 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("user - last login : " + user.LastLogin)
 	log.Println("user - password : " + user.Password)
 	log.Println("user - user email : " + user.UserEmail)
+
+	// Hash password
+	if len(user.Password) > 0 {
+		hash, passwordHashError := utils.HashPassword(user.Password)
+
+		if passwordHashError != nil {
+			log.Println(err)
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_CREATION_FAILED_MSG_KEY))
+		}
+
+		user.Password = hash
+	}
 
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
@@ -246,11 +275,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
 		return
 	}
-	defer r.Body.Close()
 
 	// Check email address field
+	if len(user.UserEmail) == 0 {
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		return
+	}
 
 	// Check password field
+	if len(user.Password) == 0 {
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.INVALID_REQUEST_PAYLOAD_MSG_KEY))
+		return
+	}
+
+	defer r.Body.Close()
+
+	// Get user data
+
 }
 
 // TODO: update password

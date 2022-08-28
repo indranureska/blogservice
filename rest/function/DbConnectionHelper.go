@@ -2,6 +2,7 @@ package function
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	serviceConst "github.com/indranureska/service/rest/common"
+	"github.com/indranureska/service/rest/utils"
 )
 
 /* Used to create a singleton object of MongoDB client.
@@ -29,8 +31,21 @@ func GetMongoDbClient() (*mongo.Client, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		// Default Blog DB URI
+		var blogDbURI string
+
+		config, err := utils.LoadConfig("../..")
+		if err != nil {
+			log.Println("cannot load config: ", err)
+			log.Println("using default configuration instead")
+			blogDbURI = serviceConst.BLOG_DB_URI
+		} else {
+			log.Println("config loaded")
+			blogDbURI = config.BlogDbURI
+		}
+
 		// Set client options
-		clientOptions := options.Client().ApplyURI(serviceConst.BLOG_DB_URI)
+		clientOptions := options.Client().ApplyURI(blogDbURI)
 		// Connect to MongoDB
 		client, err := mongo.Connect(ctx, clientOptions)
 		if err != nil {
