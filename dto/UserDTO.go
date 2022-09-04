@@ -9,4 +9,5 @@ type User struct {
 	LastLogin string             `json:"last_login" bson:"last_login"`
 	FirstName string             `json:"firstname" bson:"firstname"`
 	LastName  string             `json:"lastname" bson:"lastname"`
+	IsLoggedIn bool				 `json:"isloggedin" bson:"isloggedin"`
 }

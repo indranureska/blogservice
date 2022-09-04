@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	serviceConst "github.com/indranureska/service/rest/common"
-	"github.com/indranureska/service/rest/utils"
+	utils "github.com/indranureska/service/rest/utilities"
 )
 
 /* Used to create a singleton object of MongoDB client.

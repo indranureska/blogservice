@@ -10,7 +10,7 @@ import (
 
 	dto "github.com/indranureska/service/dto"
 	common "github.com/indranureska/service/rest/common"
-	utils "github.com/indranureska/service/rest/utils"
+	utils "github.com/indranureska/service/rest/utilities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -209,26 +209,39 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("user - password : " + user.Password)
 	log.Println("user - user email : " + user.UserEmail)
 
+	result, err := updateUserById(objectID, user)
+	if err != nil {
+		log.Println(err)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_UPDATE_FAILED_MSG_KEY))
+		return
+	} else {
+		RespondWithJSON(w, http.StatusCreated, result)
+	}
+}
+
+func updateUserById(objectID primitive.ObjectID, user dto.User) (dto.User, error) {
+	var processErr error
+
 	// Get MongoDB connection
 	client, err := GetMongoDbClient()
 	if err != nil {
-		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.DB_CONNECT_FAILED_MSG_KEY))
-		return
+		processErr = err
+		return user, processErr
 	} else {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
 		filter := bson.M{"_id": objectID}
 		update := bson.M{"$set": &user}
-		result, err := userCollection.UpdateOne(context.TODO(), filter, update)
+
+		// TODO: to check if update count to make sure it's succesfully updated
+		_, err := userCollection.UpdateOne(context.TODO(), filter, update)
 
 		if err != nil {
-			log.Println(err)
-			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_UPDATE_FAILED_MSG_KEY))
-			return
-		} else {
-			RespondWithJSON(w, http.StatusCreated, result)
+			processErr = err
 		}
+
+		return user, processErr
 	}
 }
 
@@ -262,7 +275,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: login
+// login
 func Login(w http.ResponseWriter, r *http.Request) {
 	log.Println("User login request")
 	w.Header().Set("Content-Type", "application/json")
@@ -303,16 +316,67 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		log.Println("User found, validate password")
-		isPasswordValid := utils.CheckPasswordHash(user.Password, userFromDb.Password)
+		isPasswordValid := utils.CheckPasswordHash(userFromDb.Password, user.Password)
 
 		if isPasswordValid {
 			log.Println("Password valid, update to logged in")
-			RespondWithJSON(w, http.StatusOK, userFromDb)
+			userFromDb.IsLoggedIn = true
+			objectID, _ := primitive.ObjectIDFromHex(userFromDb.ID.Hex())
+			result, err := updateUserById(objectID, userFromDb)
+			if err != nil {
+				log.Print(err)
+				RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_LOGIN_FAILED_MSG_KEY))
+				return
+			} else {
+				RespondWithJSON(w, http.StatusOK, result)
+			}
 		} else {
+			log.Println("Password invalid")
 			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_LOGIN_FAILED_MSG_KEY))
 			return
 		}
 	}
+}
+
+// TODO: logout
+func Logout(w http.ResponseWriter, r *http.Request) {
+	log.Println("User logout request")
+	w.Header().Set("Content-Type", "application/json")
+
+	var user dto.User
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&user)
+
+	defer r.Body.Close()
+
+	if err != nil {
+		log.Println("User empty")
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_INFO_EMPTY_MSG_KEY))
+		return
+	}
+
+	// Get user data
+	userFromDb, err := getUserDataFromDbByEmailAddr(user.UserEmail)
+
+	if err != nil {
+		log.Println(err)
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_NOT_FOUND_MSG_KEY))
+		return
+	} else {
+		log.Println("User found, update to logged out")
+		userFromDb.IsLoggedIn = false
+		objectID, _ := primitive.ObjectIDFromHex(userFromDb.ID.Hex())
+		result, err := updateUserById(objectID, userFromDb)
+		if err != nil {
+			log.Print(err)
+			RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_LOGOUT_FAILED_MSG_KEY))
+			return
+		} else {
+			RespondWithJSON(w, http.StatusOK, result)
+		}
+	}
+
 }
 
 // TODO: update password

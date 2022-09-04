@@ -41,3 +41,6 @@ const USER_PASSWORD_BLANK_MSG_DEF_TEXT = "User password is blank"
 
 const USER_LOGIN_FAILED_MSG_KEY = "user.login.failed"
 const USER_LOGIN_FAILED_MSG_DEF_TEXT = "User login failed"
+
+const USER_LOGOUT_FAILED_MSG_KEY = "user.logout.failed"
+const USER_LOGOUT_FAILED_MSG_DEF_TEXT = "User logout failed"

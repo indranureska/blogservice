@@ -20,9 +20,10 @@ func InitServiceMessages() {
 	messageMap[serviceConst.USER_INFO_EMPTY_MSG_KEY] = serviceConst.USER_INFO_EMPTY_MSG_DEF_TEXT
 	messageMap[serviceConst.USER_EMAIL_BLANK_MSG_KEY] = serviceConst.USER_EMAIL_BLANK_MSG_DEF_TEXT
 	messageMap[serviceConst.USER_PASSWORD_BLANK_MSG_KEY] = serviceConst.USER_PASSWORD_BLANK_MSG_DEF_TEXT
+	messageMap[serviceConst.USER_LOGIN_FAILED_MSG_KEY] = serviceConst.USER_LOGIN_FAILED_MSG_DEF_TEXT
+	messageMap[serviceConst.USER_LOGOUT_FAILED_MSG_KEY] = serviceConst.USER_LOGOUT_FAILED_MSG_DEF_TEXT
 }
 
-// TODO: To get message text from map, set default text if it's not exist
 func ConstructServiceMessage(messageKey string) (messageText string) {
 	return messageMap[messageKey]
 }

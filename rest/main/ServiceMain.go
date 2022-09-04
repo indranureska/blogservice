@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -12,20 +11,21 @@ import (
 )
 
 func main() {
+	log.Print("Starting Web Service...")
+	log.Println("Set router")
 	r := mux.NewRouter()
 
-	//r.HandleFunc("/foo", fooHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodOptions)
-	r.HandleFunc("/", helloWorldHandler)
 	r.HandleFunc(common.LIST_OF_USER_SERVICE_PATH, function.ListUser).Methods("GET")
 	r.HandleFunc(common.FIND_USER_SERVICE_PATH, function.FindUser).Methods("GET")
 	r.HandleFunc(common.CREATE_USER_SERVICE_PATH, function.CreateUser).Methods("POST")
 	r.HandleFunc(common.UPDATE_USER_SERVICE_PATH, function.UpdateUser).Methods("PUT")
 	r.HandleFunc(common.DELETE_USER_SERVICE_PATH, function.DeleteUser).Methods("DELETE")
 	r.HandleFunc(common.USER_LOGIN_SERVICE_PATH, function.Login).Methods("POST")
+	r.HandleFunc(common.USER_LOGOUT_SERVICE_PATH, function.Logout).Methods("POST")
 
 	//r.Use(mux.CORSMethodMiddleware(r))
 
-	// TODO: Initiate response message map
+	log.Print("Initiate service message")
 	function.InitServiceMessages()
 
 	srv := &http.Server{
@@ -35,21 +35,7 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
+	log.Print("Listen and serve")
 	log.Fatal(srv.ListenAndServe())
 
-}
-
-// func fooHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Access-Control-Allow-Origin", "*")
-// 	if r.Method == http.MethodOptions {
-// 		return
-// 	}
-
-// 	w.Write([]byte("foo"))
-// }
-
-func helloWorldHandler(w http.ResponseWriter, r *http.Request) {
-	var response map[string]interface{}
-	json.Unmarshal([]byte(`{ "hello": "world" }`), &response)
-	function.RespondWithJSON(w, http.StatusOK, response)
 }
