@@ -3,8 +3,10 @@ package function
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -30,8 +32,12 @@ func ListUser(w http.ResponseWriter, r *http.Request) {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
+		// Prepare context
+		ctx, cancel := context.WithTimeout(context.Background(), common.DB_OPERATION_TIMEOUT_SECONDS*time.Second)
+		defer cancel()
+
 		// bson.M{},  we passed empty filter. So we want to get all data.
-		cur, err := userCollection.Find(context.TODO(), bson.M{})
+		cur, err := userCollection.Find(ctx, bson.M{})
 
 		if err != nil {
 			log.Println(err)
@@ -101,9 +107,13 @@ func getUserDataFromDbByEmailAddr(usrEmail string) (dto.User, error) {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
+		// Prepare context
+		ctx, cancel := context.WithTimeout(context.Background(), common.DB_OPERATION_TIMEOUT_SECONDS*time.Second)
+		defer cancel()
+
 		// Find user based on parameter
 		filter := bson.M{"usr_email": usrEmail}
-		err := userCollection.FindOne(context.TODO(), filter).Decode(&user)
+		err := userCollection.FindOne(ctx, filter).Decode(&user)
 
 		if err != nil {
 			processErr = err
@@ -156,9 +166,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
+		// Prepare context
+		ctx, cancel := context.WithTimeout(context.Background(), common.DB_OPERATION_TIMEOUT_SECONDS*time.Second)
+		defer cancel()
+
 		// Check if user email address exist
 		filter := bson.M{"usr_email": user.UserEmail}
-		count, err := userCollection.CountDocuments(context.TODO(), filter)
+		count, err := userCollection.CountDocuments(ctx, filter)
 
 		if err != nil {
 			log.Println(err)
@@ -234,11 +248,28 @@ func updateUserById(objectID primitive.ObjectID, user dto.User) (dto.User, error
 		filter := bson.M{"_id": objectID}
 		update := bson.M{"$set": &user}
 
-		// TODO: to check if update count to make sure it's succesfully updated
-		_, err := userCollection.UpdateOne(context.TODO(), filter, update)
+		// Prepare context
+		ctx, cancel := context.WithTimeout(context.Background(), common.DB_OPERATION_TIMEOUT_SECONDS*time.Second)
+		defer cancel()
+
+		// Check if user exist
+		count, err := userCollection.CountDocuments(ctx, filter)
 
 		if err != nil {
 			processErr = err
+		} else {
+			// Record found, do update
+			if count == 1 {
+				// Update
+				_, err := userCollection.UpdateOne(ctx, filter, update)
+
+				if err != nil {
+					processErr = err
+				}
+			} else {
+				processErr = errors.New(ConstructServiceMessage(common.USER_NOT_FOUND_MSG_KEY))
+			}
+
 		}
 
 		return user, processErr
@@ -262,8 +293,12 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		// Select database and collection
 		userCollection := client.Database("blogdb").Collection("users")
 
+		// Prepare context
+		ctx, cancel := context.WithTimeout(context.Background(), common.DB_OPERATION_TIMEOUT_SECONDS*time.Second)
+		defer cancel()
+
 		filter := bson.M{"_id": objectID}
-		result, err := userCollection.DeleteOne(context.TODO(), filter)
+		result, err := userCollection.DeleteOne(ctx, filter)
 
 		if err != nil {
 			log.Println(err)
@@ -338,7 +373,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: logout
 func Logout(w http.ResponseWriter, r *http.Request) {
 	log.Println("User logout request")
 	w.Header().Set("Content-Type", "application/json")

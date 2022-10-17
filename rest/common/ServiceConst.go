@@ -11,3 +11,5 @@ const USER_LOGOUT_SERVICE_PATH = "/logout"
 const BLOG_DB_URI = "mongodb://127.0.0.1:27018"
 
 const BLOG_DB_URI_ENV_KEY = "BLOG_DB_URI"
+
+const DB_OPERATION_TIMEOUT_SECONDS = 5;
