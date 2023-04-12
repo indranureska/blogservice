@@ -413,4 +413,39 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TODO: update password
+// Update password
+func UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	log.Println("User login request")
+	w.Header().Set("Content-Type", "application/json")
+
+	var user dto.User
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&user)
+
+	defer r.Body.Close()
+
+	if err != nil {
+		log.Println("User empty")
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_INFO_EMPTY_MSG_KEY))
+		return
+	}
+
+	// Check email address field
+	if len(user.UserEmail) == 0 {
+		log.Println("email address is blank")
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_EMAIL_BLANK_MSG_KEY))
+		return
+	}
+
+	// Check password field
+	if len(user.Password) == 0 {
+		log.Println("user password is blank")
+		RespondWithError(w, http.StatusBadRequest, ConstructServiceMessage(common.USER_PASSWORD_BLANK_MSG_KEY))
+		return
+	}
+
+	
+}
+
+// TODO forget password
